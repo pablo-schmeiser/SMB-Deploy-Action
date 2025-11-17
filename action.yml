@@ -1,35 +1,44 @@
 name: 'SMB Deploy Action'
-description: "Automate deploying websites and more to SMB shares with this GitHub action"
+description:
+  "Automate deploying websites and more to SMB shares with this GitHub action"
 author: "Pablo Schmeiser"
 
 
 inputs:
   smb_server:
-    description: 'The IP address or hostname of the SMB server.'
+    description:
+      'The IP address or hostname of the SMB server.'
     required: true
   smb_share:
-    description: 'The name of the SMB share on the server (e.g., "MyFiles").'
+    description:
+      'The name of the SMB share on the server (e.g., "MyFiles").'
     required: true
   smb_username:
-    description: 'The username to authenticate with the SMB server.'
+    description:
+      'The username to authenticate with the SMB server.'
     required: true
   smb_password:
-    description: 'The password for the SMB username. Must be provided via secrets!'
+    description:
+      'The password for the SMB username. Must be provided via secrets!'
     required: true
   smb_domain:
-    description: 'Optional: The Windows domain name if the SMB server is part of one.'
+    description:
+      'Optional: The Windows domain name if the SMB server is part of one.'
     required: false
     default: ''
   source_path:
-    description: 'The path to files/directory to upload (relative to the repository root).'
+    description:
+      'The path to files/directory to upload (relative to the repository root).'
     required: false
     default: '.' # Upload everything from the repo root by default
   destination_path:
-    description: 'The destination path on the SMB share (e.g., "/" for root, "/backup/data/").'
+    description:
+      'The destination path on the SMB share (e.g., "/" for root, "/backup/data/").'
     required: false
     default: '/' # Upload to the root of the SMB share by default
   rsync_options:
-    description: 'Additional rsync options (e.g., "-avz --delete").'
+    description:
+      'Additional rsync options (e.g., "-avz --delete").'
     required: false
     default: '-avz --progress' # Default options for speed and verbosity
   timeout:
