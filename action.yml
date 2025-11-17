@@ -41,9 +41,6 @@ inputs:
       'Additional rsync options (e.g., "-avz --delete").'
     required: false
     default: '-avz --progress' # Default options for speed and verbosity
-  timeout:
-    required: false
-    description: "Timeout in milliseconds for SMB operations"
 
 runs:
   using: "composite"
