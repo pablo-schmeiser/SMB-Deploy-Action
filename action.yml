@@ -42,6 +42,7 @@ inputs:
     required: false
     default: '-avz --progress' # Default options for speed and verbosity
 
+
 runs:
   using: "composite"
   steps:
