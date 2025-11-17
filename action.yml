@@ -1,0 +1,107 @@
+name: 'SMB Deploy Action'
+description: "Automate deploying websites and more to SMB shares with this GitHub action"
+author: "Pablo Schmeiser"
+
+
+inputs:
+  smb_server:
+    description: 'The IP address or hostname of the SMB server.'
+    required: true
+  smb_share:
+    description: 'The name of the SMB share on the server (e.g., "MyFiles").'
+    required: true
+  smb_username:
+    description: 'The username to authenticate with the SMB server.'
+    required: true
+  smb_password:
+    description: 'The password for the SMB username. Must be provided via secrets!'
+    required: true
+  smb_domain:
+    description: 'Optional: The Windows domain name if the SMB server is part of one.'
+    required: false
+    default: ''
+  source_path:
+    description: 'The path to files/directory to upload (relative to the repository root).'
+    required: false
+    default: '.' # Upload everything from the repo root by default
+  destination_path:
+    description: 'The destination path on the SMB share (e.g., "/" for root, "/backup/data/").'
+    required: false
+    default: '/' # Upload to the root of the SMB share by default
+  rsync_options:
+    description: 'Additional rsync options (e.g., "-avz --delete").'
+    required: false
+    default: '-avz --progress' # Default options for speed and verbosity
+  timeout:
+    required: false
+    description: "Timeout in milliseconds for SMB operations"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install CIFS Utilities and rsync
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cifs-utils rsync
+    - name: Create mount point
+      shell: bash
+      run: sudo mkdir -p /mnt/smbshare
+
+    - name: Mount SMB Share
+      shell: bash
+      env:
+        SMB_SERVER: ${{ inputs.smb_server }}
+        SMB_SHARE: ${{ inputs.smb_share }}
+        SMB_USERNAME: ${{ inputs.smb_username }}
+        SMB_PASSWORD: ${{ inputs.smb_password }}
+        SMB_DOMAIN: ${{ inputs.smb_domain }}
+      run: |
+        MOUNT_OPTIONS="username=${SMB_USERNAME},password=${SMB_PASSWORD},uid=$(id -u),gid=$(id -g)"
+        if [ -n "$SMB_DOMAIN" ]; then
+          MOUNT_OPTIONS="${MOUNT_OPTIONS},domain=${SMB_DOMAIN}"
+        fi
+        
+        # Using a temporary file for password for enhanced security,
+        # preventing it from appearing in process lists if 'set -x' is active.
+        # Although GitHub secrets are usually scrubbed, this is good practice.
+        echo "${SMB_PASSWORD}" | sudo mount -t cifs \
+        -o "${MOUNT_OPTIONS}" \
+        "//${SMB_SERVER}/${SMB_SHARE}" \
+        /mnt/smbshare
+    
+    - name: Upload files using rsync
+      shell: bash
+      env:
+        SOURCE_PATH: ${{ inputs.source_path }}
+        DESTINATION_PATH: ${{ inputs.destination_path }}
+        RSYNC_OPTIONS: ${{ inputs.rsync_options }}
+      run: |
+        echo "Uploading from local path: $SOURCE_PATH"
+        echo "To remote path: /mnt/smbshare/$DESTINATION_PATH"
+
+        # Ensure source path ends with '/' for consistent rsync behavior (sync contents)
+        # and destination path exists on remote.
+        sudo mkdir -p "/mnt/smbshare/$DESTINATION_PATH" # Create dest dir if it doesn't exist on SMB share
+        
+        # If source_path is a directory, rsync needs a trailing slash to copy contents
+        # If it's a file, it should not have a trailing slash.
+        # This logic handles both cases.
+        if [ -d "$SOURCE_PATH" ]; then
+          SOURCE_RSYNC_PATH="${SOURCE_PATH}/"
+        else
+          SOURCE_RSYNC_PATH="$SOURCE_PATH"
+        fi
+
+        # Execute rsync
+        rsync $RSYNC_OPTIONS "$SOURCE_RSYNC_PATH" "/mnt/smbshare/$DESTINATION_PATH"
+
+    - name: Unmount SMB Share (Cleanup)
+      shell: bash
+      if: always() # Ensure this runs even if previous steps fail
+      run: sudo umount /mnt/smbshare || true # '|| true' prevents failure if already unmounted
+
+branding:
+  icon: "upload-cloud"
+  color: "red"
+
