@@ -28,7 +28,7 @@ inputs:
     default: ''
   source_paths:
     description:
-      'A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root).
+      'A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root).'
     required: false
     default: '.' # Upload everything from the repo root by default
   destination_path:
