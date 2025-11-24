@@ -55,17 +55,8 @@ jobs:
 Keys can be added directly to your .yml config files or referenced from your projects `Secrets` storage.
 
 I strongly recommend you store your `smb_password` and your `smb_username` as a secret.
-
-| Key Name           	| Required 	|             Example            	|   Default Value   	|                                 Description                                 	|
-|--------------------	|:--------:	|:------------------------------:	|:-----------------:	|:---------------------------------------------------------------------------:	|
-| `smb_server`       	|    Yes   	|    `smb.pablo-schmeiser.de`    	|                   	|                The IP address or hostname of the SMB server.                	|
-| `smb_share`        	|    Yes   	|          `mySmbShare`          	|                   	|                   The name of the SMB share on the server.                  	|
-| `smb_username`     	|    Yes   	| `username@pablo-schmeiser.com` 	|                   	|              The username to authenticate with the SMB server.              	|
-| `smb_password`     	|    Yes   	|   `CrazyUniquePassword&%123`   	|                   	|       The password for the SMB username. Must be provided via secrets!      	|
-| `smb_domain`       	|    No    	|          `mySmbDomain`         	|   _empty String_  	|     Optional: The Windows domain name if the SMB server is part of one.     	|
-| `source_path`      	|    No    	|          `index.html`          	|        `.`        	|   The path to files/directory to upload (relative to the repository root).  	|
-| `destination_path` 	|    No    	|             `src/`             	|        `/`        	| The destination path on the SMB share (e.g., `/` for root, `/backup/data/`) 	|
-| `rsync_options`    	|    No    	|        `-avz --progress`       	| `-avz --progress` 	|              Additional rsync options (e.g., `-avz --delete`).              	|
+<!--(inputs-start)-->
+<!--(inputs-end)-->
 
 ### Common Examples
 #### Build and Publish prebuilt websites
