@@ -1,6 +1,5 @@
-# SMB-Deploy-Action
-
-Automate deploying websites and more to SMB shares with this GitHub action.
+<!-- action-docs-header source="action-file.yml" -->
+<!-- action-docs-description source="action-file.yml" -->
 
 ---
 
@@ -55,27 +54,15 @@ jobs:
 Keys can be added directly to your .yml config files or referenced from your projects `Secrets` storage.
 
 I strongly recommend you store your `smb_password` and your `smb_username` as a secret.
-<!--(inputs-start)-->
-
-| Name  | Required | Default | Description |
-| :---: | :------: | :-----: | ----------- |
-| `smb_server` | true |  | The IP address or hostname of the SMB server. |
-| `smb_share` | true |  | The name of the SMB share on the server (e.g., "MyFiles"). |
-| `smb_username` | true |  | The username to authenticate with the SMB server. |
-| `smb_password` | true |  | The password for the SMB username. Must be provided via secrets! |
-| `smb_domain` | false |  | Optional: The Windows domain name if the SMB server is part of one. |
-| `source_paths` | false | . | A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root). |
-| `destination_path` | false | / | The destination path on the SMB share (e.g., "/" for root, "/backup/data/"). |
-| `verbosity` | false | q | Sets the verbosity for rsync. Use "v", "vv", or "vvv" for increasing verbosity. Leave empty for no extra verbosity. |
-| `rsync_options` | false | -az --progress | Additional rsync options (e.g., "-avz --delete"). |
-
-<!--(inputs-end)-->
+<!-- action-docs-(inputs) source="action-file.yml" -->
 
 ### Common Examples
 #### Build and Publish prebuilt websites
 
 #### Publish prebuilt PDFs
 
+---
+<!-- action-docs-runs source="action-file.yml" -->
 ---
 
 ## Badge
