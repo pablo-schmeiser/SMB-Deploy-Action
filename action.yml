@@ -15,7 +15,7 @@ inputs:
     required: true
   smb_username:
     description:
-      'The username to authenticate with the SMB server. Test'
+      'The username to authenticate with the SMB server. Testing'
     required: true
   smb_password:
     description:

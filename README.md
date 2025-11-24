@@ -1,6 +1,6 @@
 <!-- action-docs-header source="action-file.yml" -->
 <!-- action-docs-description source="action-file.yml" -->
-
+Test
 ---
 
 ### Usage Example
