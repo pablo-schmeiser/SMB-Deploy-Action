@@ -54,7 +54,7 @@ jobs:
 Keys can be added directly to your .yml config files or referenced from your projects `Secrets` storage.
 
 I strongly recommend you store your `smb_password` and your `smb_username` as a secret.
-<!-- action-docs-(inputs) source="action-file.yml" -->
+<!-- action-docs-inputs source="action-file.yml" -->
 
 ### Common Examples
 #### Build and Publish prebuilt websites
