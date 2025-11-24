@@ -1,0 +1,29 @@
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - action.yml
+  workflow_dispatch:
+
+jobs:
+  update readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update README.md
+        uses: mdvorak/update-action-readme@v1.2.0
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "docs(readme): update README.md tables on ${{ github.ref_name }}"
+          commit-message: "docs(readme): updated README.md io tables"
+          body: "Updated README.md inputs/outputs tables, according to action.yml file"
+          branch: update-readme--${{ github.ref_name }}
+          delete-branch: true
+          labels: bot,documentation
