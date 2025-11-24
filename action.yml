@@ -26,7 +26,7 @@ inputs:
       'Optional: The Windows domain name if the SMB server is part of one.'
     required: false
     default: ''
-  source-paths:
+  source_paths:
     description:
       'A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root).
     required: false
