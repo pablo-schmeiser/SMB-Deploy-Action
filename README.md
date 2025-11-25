@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
-    
+
     - name: 📂 Sync all files
       uses: pablo-schmeiser/SMB-Deploy-Action@v0.0.1
       with:
