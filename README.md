@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
-    
+
     - name: 📂 Sync all files
       uses: pablo-schmeiser/SMB-Deploy-Action@v0.0.1
       with:
@@ -64,9 +64,9 @@ I strongly recommend you store your `smb_password` and your `smb_username` as a 
 | `smb_username` | true |  | The username to authenticate with the SMB server. |
 | `smb_password` | true |  | The password for the SMB username. Must be provided via secrets! |
 | `smb_domain` | false |  | Optional: The Windows domain name if the SMB server is part of one. |
-| `source_paths` | false | . | A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root). |
-| `destination_path` | false | / | The destination path on the SMB share (e.g., "/" for root, "/backup/data/"). |
-| `verbosity` | false | q | Sets the verbosity for rsync. Use "v", "vv", or "vvv" for increasing verbosity. Leave empty for no extra verbosity. |
+| `source_paths` | false | . | A space-separated list of file/directory paths<br>AND/OR glob patterns to upload (relative to the repository root). |
+| `destination_path` | false | / | The destination path on the SMB share<br>(e.g., "/" for root, "/backup/data/"). |
+| `verbosity` | false | q | Sets the verbosity for rsync. Use "v", "vv", or "vvv"<br>for increasing verbosity. Leave empty for no extra verbosity. |
 | `rsync_options` | false | -az --progress | Additional rsync options (e.g., "-avz --delete"). |
 
 <!--(inputs-end)-->

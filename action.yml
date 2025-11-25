@@ -1,3 +1,4 @@
+---
 name: 'SMB Deploy Action'
 description:
   "Automate deploying websites and more to SMB shares with this GitHub action"
@@ -27,25 +28,28 @@ inputs:
     required: false
     default: ''
   source_paths:
-    description:
-      'A space-separated list of file/directory paths AND/OR glob patterns to upload (relative to the repository root).'
+    description: |
+      A space-separated list of file/directory paths
+      AND/OR glob patterns to upload (relative to the repository root).
     required: false
-    default: '.' # Upload everything from the repo root by default
+    default: '.'  # Upload everything from the repo root by default
   destination_path:
-    description:
-      'The destination path on the SMB share (e.g., "/" for root, "/backup/data/").'
+    description: |
+      The destination path on the SMB share
+      (e.g., "/" for root, "/backup/data/").
     required: false
-    default: '/' # Upload to the root of the SMB share by default
+    default: '/'  # Upload to the root of the SMB share by default
   verbosity:
-    description:
-      'Sets the verbosity for rsync. Use "v", "vv", or "vvv" for increasing verbosity. Leave empty for no extra verbosity.'
+    description: |
+      Sets the verbosity for rsync. Use "v", "vv", or "vvv"
+      for increasing verbosity. Leave empty for no extra verbosity.
     required: false
     default: 'q'
   rsync_options:
     description:
       'Additional rsync options (e.g., "-avz --delete").'
     required: false
-    default: '-az --progress' # Default options for speed
+    default: '-az --progress'  # Default options for speed
 
 runs:
   using: "composite"
@@ -72,7 +76,7 @@ runs:
         if [ -n "$SMB_DOMAIN" ]; then
           MOUNT_OPTIONS="${MOUNT_OPTIONS},domain=${SMB_DOMAIN}"
         fi
-        
+
         # Using a temporary file for password for enhanced security,
         # preventing it from appearing in process lists if 'set -x' is active.
         # Although GitHub secrets are usually scrubbed, this is good practice.
@@ -80,7 +84,7 @@ runs:
         -o "${MOUNT_OPTIONS}" \
         "//${SMB_SERVER}/${SMB_SHARE}" \
         /mnt/smbshare
-    
+
     - name: Upload files using rsync
       shell: bash
       env:
@@ -89,7 +93,8 @@ runs:
         RSYNC_OPTIONS_BASE: ${{ inputs.rsync_options }}
         VERBOSITY_LEVEL: ${{ inputs.verbosity }}
       run: |
-        # Enable nullglob so globs that match no files are skipped instead of being treated as literal filenames.
+        # Enable nullglob so globs that match no files are skipped
+        # instead of being treated as literal filenames.
         shopt -s nullglob
 
         # Construct final rsync options, adding verbosity if set
@@ -108,8 +113,8 @@ runs:
         # The shell performs glob expansion (filename expansion) on the unquoted variable.
         for SOURCE_PATH_ITEM in $SOURCE_PATHS; do
           echo "Processing source item: $SOURCE_PATH_ITEM"
-          
-          # Since we enabled nullglob, if a glob pattern didn't match anything, 
+
+          # Since we enabled nullglob, if a glob pattern didn't match anything,
           # the item is skipped here, so we only deal with actual files/directories.
 
           # Determine rsync source path (trailing slash for directories)
@@ -134,10 +139,9 @@ runs:
 
     - name: Unmount SMB Share (Cleanup)
       shell: bash
-      if: always() # Ensure this runs even if previous steps fail
-      run: sudo umount /mnt/smbshare || true # '|| true' prevents failure if already unmounted
+      if: always()  # Ensure this runs even if previous steps fail
+      run: sudo umount /mnt/smbshare || true  # '|| true' prevents failure if already unmounted
 
 branding:
   icon: "upload-cloud"
   color: "white"
-
