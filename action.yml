@@ -50,7 +50,6 @@ runs:
       shell: bash
       # 'cifs-utils' is no longer needed, only 'smbclient'
       run: |
-        apt-get update
         apt-get install -y smbclient
 
     - name: Upload files using smbclient
