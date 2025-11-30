@@ -57,11 +57,11 @@ runs:
     - name: Install CIFS Utilities and rsync
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y cifs-utils rsync
+        apt-get update
+        apt-get install -y cifs-utils rsync
     - name: Create mount point
       shell: bash
-      run: sudo mkdir -p /mnt/smbshare
+      run: mkdir -p /mnt/smbshare
 
     - name: Mount SMB Share
       shell: bash
@@ -80,7 +80,7 @@ runs:
         # Using a temporary file for password for enhanced security,
         # preventing it from appearing in process lists if 'set -x' is active.
         # Although GitHub secrets are usually scrubbed, this is good practice.
-        echo "${SMB_PASSWORD}" | sudo mount -t cifs \
+        echo "${SMB_PASSWORD}" | mount -t cifs \
         -o "${MOUNT_OPTIONS}" \
         "//${SMB_SERVER}/${SMB_SHARE}" \
         /mnt/smbshare
@@ -107,7 +107,7 @@ runs:
         echo "To remote path: /mnt/smbshare/$DESTINATION_PATH"
 
         # Create dest dir if it doesn't exist on SMB share
-        sudo mkdir -p "/mnt/smbshare/$DESTINATION_PATH"
+        mkdir -p "/mnt/smbshare/$DESTINATION_PATH"
 
         # Iterate over the space-separated list of paths/globs.
         # The shell performs glob expansion (filename expansion) on the unquoted variable.
@@ -140,7 +140,7 @@ runs:
     - name: Unmount SMB Share (Cleanup)
       shell: bash
       if: always()  # Ensure this runs even if previous steps fail
-      run: sudo umount /mnt/smbshare || true  # '|| true' prevents failure if already unmounted
+      run: umount /mnt/smbshare || true  # '|| true' prevents failure if already unmounted
 
 branding:
   icon: "upload-cloud"
