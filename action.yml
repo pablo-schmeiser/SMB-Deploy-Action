@@ -1,7 +1,7 @@
 ---
 name: 'SMB Deploy Action'
 description:
-  "Automate deploying websites and more to SMB shares with this GitHub action"
+  "Automate deploying websites and more to SMB shares with this GitHub action."
 author: "Pablo Schmeiser"
 
 
@@ -32,38 +32,28 @@ inputs:
       A space-separated list of file/directory paths
       AND/OR glob patterns to upload (relative to the repository root).
     required: false
-    default: '.'  # Upload everything from the repo root by default
+    default: '*' # Upload everything from the repo root by default
   destination_path:
     description: |
       The destination path on the SMB share
       (e.g., "/" for root, "/backup/data/").
     required: false
-    default: '/'  # Upload to the root of the SMB share by default
-  verbosity:
-    description: |
-      Sets the verbosity for rsync. Use "v", "vv", or "vvv"
-      for increasing verbosity. Leave empty for no extra verbosity.
-    required: false
-    default: 'q'
-  rsync_options:
-    description:
-      'Additional rsync options (e.g., "-avz --delete").'
-    required: false
-    default: '-az --progress'  # Default options for speed
+    default: '/' # Upload to the root of the SMB share by default
+
+# NOTE: The 'verbosity' and 'rsync_options' inputs were removed
+# as they are not applicable to the smbclient-based approach.
 
 runs:
   using: "composite"
   steps:
-    - name: Install CIFS Utilities and rsync
+    - name: Install SMB Client
       shell: bash
+      # 'cifs-utils' is no longer needed, only 'smbclient'
       run: |
         apt-get update
-        apt-get install -y cifs-utils rsync
-    - name: Create mount point
-      shell: bash
-      run: mkdir -p /mnt/smbshare
+        apt-get install -y smbclient
 
-    - name: Mount SMB Share
+    - name: Upload files using smbclient
       shell: bash
       env:
         SMB_SERVER: ${{ inputs.smb_server }}
@@ -71,76 +61,34 @@ runs:
         SMB_USERNAME: ${{ inputs.smb_username }}
         SMB_PASSWORD: ${{ inputs.smb_password }}
         SMB_DOMAIN: ${{ inputs.smb_domain }}
-      run: |
-        MOUNT_OPTIONS="username=${SMB_USERNAME},password=${SMB_PASSWORD},uid=$(id -u),gid=$(id -g)"
-        if [ -n "$SMB_DOMAIN" ]; then
-          MOUNT_OPTIONS="${MOUNT_OPTIONS},domain=${SMB_DOMAIN}"
-        fi
-
-        # Using a temporary file for password for enhanced security,
-        # preventing it from appearing in process lists if 'set -x' is active.
-        # Although GitHub secrets are usually scrubbed, this is good practice.
-        echo "${SMB_PASSWORD}" | mount -t cifs \
-        -o "${MOUNT_OPTIONS}" \
-        "//${SMB_SERVER}/${SMB_SHARE}" \
-        /mnt/smbshare
-
-    - name: Upload files using rsync
-      shell: bash
-      env:
         SOURCE_PATHS: ${{ inputs.source_paths }}
         DESTINATION_PATH: ${{ inputs.destination_path }}
-        RSYNC_OPTIONS_BASE: ${{ inputs.rsync_options }}
-        VERBOSITY_LEVEL: ${{ inputs.verbosity }}
       run: |
-        # Enable nullglob so globs that match no files are skipped
-        # instead of being treated as literal filenames.
-        shopt -s nullglob
+        # Construct the full server path for smbclient
+        SERVER_PATH="//${SMB_SERVER}/${SMB_SHARE}"
 
-        # Construct final rsync options, adding verbosity if set
-        FINAL_RSYNC_OPTIONS="$RSYNC_OPTIONS_BASE"
-        if [ -n "$VERBOSITY_LEVEL" ]; then
-          FINAL_RSYNC_OPTIONS="${FINAL_RSYNC_OPTIONS} -${VERBOSITY_LEVEL}"
+        # Construct credentials string
+        CREDENTIALS="-U ${SMB_USERNAME}%${SMB_PASSWORD}"
+        if [ -n "$SMB_DOMAIN" ]; then
+          CREDENTIALS="${CREDENTIALS} -W ${SMB_DOMAIN}"
         fi
 
-        echo "Using rsync options: $FINAL_RSYNC_OPTIONS"
-        echo "To remote path: /mnt/smbshare/$DESTINATION_PATH"
+        # Construct smbclient commands
+        # 1. 'prompt off': Turn off interactive prompt for mput confirmation.
+        # 2. 'recurse on': Enable recursive directory upload.
+        # 3. 'cd': Change directory to the remote destination path on the share.
+        # 4. 'lcd .': Set the local directory to the current repo root.
+        # 5. 'mput': Upload the source_paths list (smbclient handles glob expansion).
+        # NOTE: smbclient's 'mput' is basic; it overwrites but doesn't handle deletion
+        # or advanced comparison like rsync.
 
-        # Create dest dir if it doesn't exist on SMB share
-        mkdir -p "/mnt/smbshare/$DESTINATION_PATH"
+        SMB_COMMANDS="prompt off; recurse on; cd ${DESTINATION_PATH}; lcd .; mput ${SOURCE_PATHS}"
 
-        # Iterate over the space-separated list of paths/globs.
-        # The shell performs glob expansion (filename expansion) on the unquoted variable.
-        for SOURCE_PATH_ITEM in $SOURCE_PATHS; do
-          echo "Processing source item: $SOURCE_PATH_ITEM"
+        echo "Connecting to $SERVER_PATH..."
+        echo "Executing commands: $SMB_COMMANDS"
 
-          # Since we enabled nullglob, if a glob pattern didn't match anything,
-          # the item is skipped here, so we only deal with actual files/directories.
-
-          # Determine rsync source path (trailing slash for directories)
-          # If it's a directory, rsync needs a trailing slash to copy contents
-          # If it's a file, it should not have a trailing slash.
-          if [ -d "$SOURCE_PATH_ITEM" ]; then
-            SOURCE_RSYNC_PATH="${SOURCE_PATH_ITEM}/"
-            echo "Uploading directory contents from: $SOURCE_RSYNC_PATH"
-          elif [ -f "$SOURCE_PATH_ITEM" ]; then
-            SOURCE_RSYNC_PATH="$SOURCE_PATH_ITEM"
-            echo "Uploading file: $SOURCE_RSYNC_PATH"
-          else
-            # This case should ideally not happen if the input was a clean glob/path list
-            # and the file system is stable, but is a safe fallback.
-            echo "Warning: Source path '$SOURCE_PATH_ITEM' does not exist or is not a file/directory and will be skipped."
-            continue
-          fi
-
-          # Execute rsync
-          rsync $FINAL_RSYNC_OPTIONS "$SOURCE_RSYNC_PATH" "/mnt/smbshare/$DESTINATION_PATH"
-        done
-
-    - name: Unmount SMB Share (Cleanup)
-      shell: bash
-      if: always()  # Ensure this runs even if previous steps fail
-      run: umount /mnt/smbshare || true  # '|| true' prevents failure if already unmounted
+        # Execute smbclient
+        smbclient "$SERVER_PATH" $CREDENTIALS -c "$SMB_COMMANDS"
 
 branding:
   icon: "upload-cloud"
